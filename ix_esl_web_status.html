@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ix_esl_web 功能進度</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column; summary strip on top, then one table per sidebar page in sidebar order */
+:root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --fg: #1d232b;
+    --muted: #5d6773;
+    --line: #dde1e7;
+    --accent: #1f5fa8;
+    --done: #1e7a4c;
+    --done-bg: #e3f3ea;
+    --todo: #b3401f;
+    --todo-bg: #fbe8e1;
+    --skip: #6a6f78;
+    --skip-bg: #eceef1;
+    --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --bg: #14181d; --surface: #1c2229; --fg: #e4e8ed; --muted: #9aa4b0; --line: #2e3640; --accent: #7fb2ec;
+        --done: #6fd09c; --done-bg: #173226; --todo: #f0997c; --todo-bg: #3a2119; --skip: #a8afb9; --skip-bg: #272d35;
+        color-scheme: dark;
+    }
+}
+:root[data-theme="dark"] {
+    --bg: #14181d; --surface: #1c2229; --fg: #e4e8ed; --muted: #9aa4b0; --line: #2e3640; --accent: #7fb2ec;
+    --done: #6fd09c; --done-bg: #173226; --todo: #f0997c; --todo-bg: #3a2119; --skip: #a8afb9; --skip-bg: #272d35;
+    color-scheme: dark;
+}
+body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+}
+.page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding-block: 40px 64px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid;
+    gap: 32px;
+}
+header { display: grid; gap: 8px; }
+h1 { margin: 0; font-size: 28px; line-height: 1.25; font-weight: 700; text-wrap: balance; }
+.meta { margin: 0; color: var(--muted); font-size: 13px; }
+code, .mono { font-family: var(--font-mono); font-size: 0.88em; }
+.summary {
+    display: grid;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 20px;
+}
+.counts { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+.count { display: flex; align-items: baseline; gap: 8px; }
+.count b { font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1; }
+.count span { color: var(--muted); font-size: 14px; }
+.count.done b { color: var(--done); }
+.count.todo b { color: var(--todo); }
+.count.skip b { color: var(--skip); }
+.bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--line); }
+.bar i { display: block; }
+.bar .done { background: var(--done); }
+.bar .todo { background: var(--todo); }
+.bar .skip { background: var(--skip); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button {
+    font: inherit;
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--fg);
+    cursor: pointer;
+}
+.filters button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.filters button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+section { display: grid; gap: 10px; }
+h2 { margin: 0; font-size: 18px; font-weight: 700; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+h2 small { font-size: 13px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0.04em; white-space: nowrap; }
+td.feature { min-width: 14em; }
+td.status { white-space: nowrap; width: 1%; }
+td.log { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular-nums; width: 1%; }
+.note { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+.pill {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 1px 9px;
+    border-radius: 999px;
+    line-height: 1.7;
+}
+.pill.done { color: var(--done); background: var(--done-bg); }
+.pill.todo { color: var(--todo); background: var(--todo-bg); }
+.pill.skip { color: var(--skip); background: var(--skip-bg); }
+.feature-link { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.feature-link:hover { text-decoration-thickness: 2px; }
+.feature-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.details { display: grid; gap: 14px; }
+.detail {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: grid;
+    gap: 10px;
+    scroll-margin-top: 16px;
+    min-width: 0;
+}
+.detail:target { border-color: var(--todo); }
+.detail h3 { margin: 0; font-size: 16px; font-weight: 700; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.detail h3 small { font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0.04em; }
+.detail dl { margin: 0; display: grid; grid-template-columns: 5.5em 1fr; gap: 6px 14px; font-size: 14px; }
+.detail dt { color: var(--muted); font-size: 13px; padding-top: 1px; }
+.detail dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.detail ul { margin: 0; padding-left: 1.2em; display: grid; gap: 2px; }
+@media (max-width: 520px) {
+    .detail dl { grid-template-columns: 1fr; gap: 2px; }
+    .detail dd { margin-bottom: 6px; }
+}
+.basis { margin: 0; color: var(--muted); font-size: 13px; display: grid; gap: 4px; }
+.basis p { margin: 0; max-width: 72ch; }
+@media (max-width: 520px) {
+    h1 { font-size: 23px; }
+    th, td { padding: 8px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+    <header>
+        <h1>ix_esl_web 功能進度</h1>
+        <p class="meta">2026-10-27 · ix_esl_web HEAD <span class="mono">212e9cd</span>（multi-language），working tree 無未 commit 修改</p>
+    </header>
+
+    <div class="summary" aria-label="總計">
+        <div class="counts" id="counts"></div>
+        <div class="bar" id="bar" aria-hidden="true"></div>
+        <div class="filters" role="group" aria-label="篩選">
+            <button type="button" id="f-all" data-filter="all" aria-pressed="true">全部</button>
+            <button type="button" id="f-todo" data-filter="todo" aria-pressed="false">只看未完成</button>
+            <button type="button" id="f-done" data-filter="done" aria-pressed="false">只看完成</button>
+            <button type="button" id="f-skip" data-filter="skip" aria-pressed="false">只看決定不做</button>
+        </div>
+    </div>
+
+    <div id="sections"></div>
+
+    <section aria-labelledby="h-details">
+        <h2 id="h-details">未完成細項<small>依側欄順序</small></h2>
+        <div class="details" id="details"></div>
+    </section>
+
+    <div class="basis">
+        <p><b>判斷依據</b>：有沒有 server route、Tags 頁的 <code>wiredActions</code>（<code>static/js/tags.js</code>）、前端是不是還在用 prototype 的 sample。</p>
+        <p><b>gateway log</b>：<code>log/AP1</code>、<code>log/AP4</code> 裡 <code>put_job_queue=</code> 出現的次數，只代表 job 送到 gateway 跑過，不代表結果是 PASS。「—」表示這個功能不經過 gateway job。</p>
+        <p><b>決定不做</b>：先前討論時決定不做的項目，括號內是當時的原因。</p>
+    </div>
+</div>
+
+<script>
+var data = [
+    {
+        page: "AP",
+        rows: [
+            ["Overview（AP 列表、刪除）", "done", "—"],
+            ["AP Switch（Current AP）", "done", "—"],
+            ["Dongle DFU", "done", "沒看到"],
+        ],
+    },
+    {
+        page: "Tags",
+        rows: [
+            ["Overview（每日圖表、每小時明細）", "done", "—"],
+            ["Tag Management 列表、篩選、排序、Export CSV", "done", "—"],
+            ["Rotation 180°", "done", "—"],
+            ["Configure", "done", "41"],
+            ["Get Battery & RSSI", "done", "13"],
+            ["Update display", "done", "34 image_update + 3 display_image"],
+            ["Update display+", "done", "4", "只支援 Heatshrink"],
+            ["Assign product / Unbind", "done", "—"],
+            ["Organize › Assign group", "done", "—"],
+            ["Groups 改名、刪除", "todo", "—", "", "groups"],
+            ["Display › Refresh display", "done", "2"],
+            ["Display › Assign image file", "done", "—"],
+            ["Display › Blink LED", "done", "61 led_control", "次數和 LED control 合計"],
+            ["Display › LED control（含 timed）", "done", "同上"],
+            ["Query › Ping", "done", "3"],
+            ["Query › Get Button Status", "done", "沒看到對應的 job"],
+            ["Query › Send Roaming", "done", "沒看到"],
+            ["Maintenance › Unassociated", "done", "3"],
+            ["Maintenance › Firmware update（Tag FOTA）", "done", "2"],
+            ["Maintenance › Reset update count", "todo", "—", "", "reset-count"],
+            ["Factory Reset", "done", "1"],
+            ["Delete / Force Delete", "done", "2 / 19"],
+            ["Add tags › Add manually", "done", "—"],
+            ["Add tags › Scan nearby", "done", "37 scan"],
+            ["Add tags › Import CSV", "todo", "—", "", "add-csv"],
+            ["Add tags › Quick deploy", "todo", "—", "", "add-range"],
+            ["Flash log › Enable / Dump / Assert", "done", "2 / 2 / 沒看到"],
+            ["Flash log › Log files 列表、下載", "done", "—"],
+            ["FOTA V2（整個 AP 廣播）", "todo", "—", "2.0.1 的 page_tag_fota_v2.html", "fota-v2"],
+        ],
+    },
+    {
+        page: "Products",
+        rows: [
+            ["Product Setting 新增、修改、刪除", "done", "—"],
+            ["Product Setting Import CSV / Export CSV", "done", "—"],
+            ["Product Binding 列表", "done", "—"],
+            ["產品圖（綁定、Update display、Preview 時產生）", "done", "—"],
+        ],
+    },
+    {
+        page: "Templates",
+        rows: [
+            ["新增、修改、刪除、上傳圖檔", "done", "—"],
+            ["Edit template：拖曳移動/縮放框、預覽放大、Title / Label / Code / Price", "done", "—"],
+            ["Update time 設定", "skip", "—", "template_info 沒有欄位，產圖也不支援；畫面上是 disabled"],
+        ],
+    },
+    {
+        page: "Logs",
+        rows: [
+            ["Execution / Image Update / Battery & RSSI / Device State / Roaming 五個分頁", "done", "—"],
+            ["2.0.1 的 Time Spent、Tag Count By Time 圖表", "todo", "—", "", "log-charts"],
+        ],
+    },
+    {
+        page: "Settings",
+        rows: [
+            ["Tool Setting", "done", "—"],
+            ["RACE Command", "todo", "—", "畫面有了，Send 還是 prototype 的 sample 回應（settings.js prototypeRequest）", "race"],
+            ["Configure Key", "todo", "—", "2.0.1 的 page_configure_key.html，ix_esl_web 還沒有這頁", "configure-key"],
+        ],
+    },
+    {
+        page: "其他",
+        rows: [
+            ["語言切換：header、側欄、console 固定文字、AP 頁", "done", "—", "中文是草稿，還沒給 PM 看"],
+            ["語言切換：Tags、Products、Templates、Logs、Settings", "todo", "—", "", "i18n"],
+            ["Update display 的 Compress 下拉", "skip", "—", "只用 Heatshrink"],
+        ],
+    },
+];
+
+/* Each unfinished row's id (5th field) points at one of these. Text in `backticks` is shown as code. */
+var details = [
+    {
+        id: "groups",
+        title: "Groups 改名、刪除",
+        page: "Tags",
+        source: ["prototype 沒有這個畫面；2.0.1 沒有 group，`ix_group` 是 ix_esl_web 自己加的表"],
+        have: [
+            "`ix_group` 表（`dongle_addr`、`group_id`、`name`），每個 AP 各自一套",
+            "Assign group 建立新 group 時可以取名（最多 40 字）",
+        ],
+        todo: [
+            "Groups 選單加改名、刪除的入口",
+            "server 加改名、刪除的 API",
+            "刪除時把該 group 裡 tag 的 `esl_tag_info.ix_group_id` 改回 0",
+        ],
+    },
+    {
+        id: "reset-count",
+        title: "Reset update count",
+        page: "Tags › More › Maintenance",
+        source: [
+            "2.0.1 `/reset_image_update_count`：把 func `reset_image_update_count` 送給 gateway，不帶 MAC，等於整個 AP 的 tag",
+            "prototype 已經有確認 dialog（整個 AP 的所有 tag）",
+        ],
+        have: ["services_db 有 `_reset_image_update_count`（`UPDATE esl_tag_info SET update_image_count=0 WHERE dongle_addr=?`）"],
+        todo: [
+            "server 加 API，直接改 DB",
+            "確認 gateway 記憶體裡的 `update_image_count`（`cloud_db.cc` 的 tag cache）什麼時候重新讀 DB，否則下一次 image update 可能還用舊的值",
+        ],
+        note: [
+            "gateway（`esl_gateway_src`）裡找不到處理 `reset_image_update_count` 的程式，所以 2.0.1 這條路可能沒有真的清到 DB。這是從原始碼推論，沒有實測。",
+        ],
+    },
+    {
+        id: "add-csv",
+        title: "Add tags › Import CSV",
+        page: "Tags",
+        source: ["只有 prototype 有（2.0.1 的 Add/Delete Tag 頁只有 Export CSV）", "prototype 的規則：第一欄是 MAC，header 列可有可無"],
+        have: ["prototype 的 dialog 畫面", "`/api/tags/add`：一次新增一顆，已存在時回錯誤"],
+        todo: [
+            "批次新增的 API（或前端逐筆呼叫 `/api/tags/add`）",
+            "預覽：列出格式錯誤、重複、已存在的 MAC，只新增正確的列（可沿用 Products Import CSV 的做法）",
+        ],
+        note: ["只寫 DB，不會送任何指令給 tag"],
+    },
+    {
+        id: "add-range",
+        title: "Add tags › Quick deploy",
+        page: "Tags",
+        source: ["只有 prototype 有：輸入 Start MAC、End MAC，兩端都包含"],
+        have: ["prototype 的 dialog 畫面", "`/api/tags/add`"],
+        todo: ["和 Import CSV 共用批次新增的 API", "範圍太大時擋下"],
+        note: ["只寫 DB，不會送任何指令給 tag"],
+    },
+    {
+        id: "fota-v2",
+        title: "FOTA V2",
+        page: "Tags",
+        source: [
+            "2.0.1 `page_tag_fota_v2.html`：上傳 `zephyr.signed.confirmed.bin`，送 flag `tag_fota_v2`；gateway `run_tag_fota_v2`（`esl_fota_v2_flow.cc`）用 PAwR 對整個 AP 廣播",
+            "2.0.1 `/get_fota_v2_tag_status`：讀 `esl_tag_info.fota_v2_status`，顯示每顆 tag 的狀態",
+        ],
+        have: [
+            "`api_job.py` 已經有 `tag_fota_v2` 的 branch（把檔案傳給 gateway）",
+            "DB 已經有 `fota_v2_status` 欄位",
+            "1592 ER8、1615 ER6 都有 V2 的程式",
+        ],
+        todo: ["上傳檔案的 route（設定 `g_fota_v2_file_name`、檢查版本）", "UI 入口", "每顆 tag 的 V2 狀態顯示"],
+        note: [
+            "V2 只比對 4 bytes 版本，同一個 x.y.z、不同 commit 的 image 會回 SAME_VERSION",
+            "gateway、1592、1615 三邊的 V2 都還沒有在硬體上跑過",
+        ],
+    },
+    {
+        id: "log-charts",
+        title: "Logs 圖表",
+        page: "Logs › Execution",
+        source: [
+            "2.0.1 `report_run_status.html`：configure、image update、tag_fota_v2 各有兩張圖",
+            "Time Spent：每顆 tag 花的時間（ms，bar chart），route `run_report_*_time`",
+            "Tag Count By Time：各個時間點完成的 tag 數，route `run_report_*_count_by_time`",
+        ],
+        have: ["Execution 分頁的表格和 Details", "資料表（`esl_img_update` 等）在 hist DB"],
+        todo: ["server 加這兩種查詢的 API", "Execution 分頁加圖表"],
+    },
+    {
+        id: "race",
+        title: "RACE Command",
+        page: "Settings",
+        source: ["2.0.1 `page_race_raw_command.html`：送 flag `race_command` 和 `race_command_data`，把回傳的 `command_response` 接在畫面上"],
+        have: [
+            "畫面（輸入框、Send、Clear、紀錄）",
+            "`api_job.py` 已經有 `race_command` 的 branch（去掉非 hex 字元後送給 gateway）",
+            "gateway `esl_server_flow.cc` 同步回 `command_response`，`/tag_func_request` 會把它傳回前端",
+        ],
+        todo: ["`settings.js` 的 `prototypeRequest` 換成 POST `/tag_func_request`，顯示 `command_response` 或 `error`"],
+        note: ["九項裡剩下工作最少的一項"],
+    },
+    {
+        id: "configure-key",
+        title: "Configure Key",
+        page: "Settings（暫定）",
+        source: [
+            "2.0.1 `page_configure_key.html`：Generate 產生 ap_roaming_key（16 B）、ap_key（24 B）、ap_csrk（16 B），public key 讀 `key_store/public_key.pem`，沒有就產生一組 ECDSA key pair",
+            "Save：送 func `set_esl_plus_configure_keys` 給 gateway，gateway 呼叫 `race_esl_plus_configure_keys` 寫進 1592",
+        ],
+        have: [
+            "`ix_esl_web/key_store/` 已經有 `private_key.pem`、`public_key.pem`",
+            "roaming 簽章（`request_signature`）已經在用這把 private key",
+            "gateway 已經支援 `set_esl_plus_configure_keys`",
+        ],
+        todo: ["新的頁面或分頁", "server 加 Generate、Save 的 API"],
+        note: ["重新產生 key pair 之後，已經 configure 的 tag 會受什麼影響，還沒查"],
+    },
+    {
+        id: "i18n",
+        title: "語言切換：其餘頁面",
+        page: "全部",
+        source: ["`I18N_PLAN.md` 的後續批次"],
+        have: ["i18next、`/i18n/resources.js`、`static/js/i18n.js`", "header、側欄、console 固定文字、AP 頁、`api_ap.py` 的錯誤訊息"],
+        todo: [
+            "Tags（含 console 的 job 文字、functionLabels、Assign dialog）",
+            "Products、Templates、Logs、Settings",
+            "`api_tags.py`、`api_products.py`、`api_templates.py`、`api_logs.py`、`api_settings.py` 的錯誤訊息加 `message_key`",
+        ],
+        note: ["中文是我起草的，要給 PM 確認用詞"],
+    },
+];
+
+var labels = { done: "完成", todo: "未完成", skip: "決定不做" };
+
+function codeText(s) {
+    return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+function renderDetails() {
+    var parts = [
+        ["source", "參考來源"],
+        ["have", "已經有"],
+        ["todo", "要做"],
+        ["note", "注意"],
+    ];
+    document.getElementById("details").innerHTML = details
+        .map(function (d) {
+            return (
+                '<article class="detail" id="' + d.id + '"><h3>' + esc(d.title) + "<small>" + esc(d.page) + "</small></h3><dl>" +
+                parts
+                    .filter(function (p) {
+                        return d[p[0]] && d[p[0]].length;
+                    })
+                    .map(function (p) {
+                        return (
+                            "<dt>" + p[1] + "</dt><dd><ul>" +
+                            d[p[0]]
+                                .map(function (line) {
+                                    return "<li>" + codeText(line) + "</li>";
+                                })
+                                .join("") +
+                            "</ul></dd>"
+                        );
+                    })
+                    .join("") +
+                "</dl></article>"
+            );
+        })
+        .join("");
+}
+
+function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+}
+
+function tally(rows) {
+    var t = { done: 0, todo: 0, skip: 0 };
+    rows.forEach(function (r) {
+        t[r[1]]++;
+    });
+    return t;
+}
+
+function render(filter) {
+    var html = "";
+    data.forEach(function (group, gi) {
+        var rows = group.rows.filter(function (r) {
+            return filter === "all" || r[1] === filter;
+        });
+        if (!rows.length) return;
+        var t = tally(group.rows);
+        var parts = ["完成 " + t.done, "未完成 " + t.todo];
+        if (t.skip) parts.push("決定不做 " + t.skip);
+        html +=
+            '<section aria-labelledby="h-' + gi + '"><h2 id="h-' + gi + '">' + esc(group.page) +
+            "<small>" + parts.join(" · ") + "</small></h2>" +
+            '<div class="table-wrap"><table><thead><tr><th>功能</th><th>狀態</th><th>gateway log</th></tr></thead><tbody>' +
+            rows
+                .map(function (r) {
+                    return (
+                        '<tr><td class="feature">' +
+                        (r[4] ? '<a class="feature-link" href="#' + r[4] + '" title="看細項">' + esc(r[0]) + "</a>" : esc(r[0])) +
+                        (r[3] ? '<span class="note">' + esc(r[3]) + "</span>" : "") +
+                        '</td><td class="status"><span class="pill ' + r[1] + '">' + labels[r[1]] +
+                        '</span></td><td class="log">' + esc(r[2]) + "</td></tr>"
+                    );
+                })
+                .join("") +
+            "</tbody></table></div></section>";
+    });
+    var box = document.getElementById("sections");
+    box.innerHTML = html;
+    box.style.display = "grid";
+    box.style.gap = "28px";
+}
+
+(function summary() {
+    var all = [];
+    data.forEach(function (g) {
+        all = all.concat(g.rows);
+    });
+    var t = tally(all);
+    var total = all.length;
+    document.getElementById("counts").innerHTML = ["done", "todo", "skip"]
+        .map(function (k) {
+            return '<div class="count ' + k + '"><b>' + t[k] + "</b><span>" + labels[k] + "</span></div>";
+        })
+        .join("") + '<div class="count"><b>' + total + "</b><span>項合計</span></div>";
+    document.getElementById("bar").innerHTML = ["done", "todo", "skip"]
+        .map(function (k) {
+            return '<i class="' + k + '" style="width:' + (t[k] / total) * 100 + '%"></i>';
+        })
+        .join("");
+})();
+
+document.querySelectorAll("[data-filter]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+        document.querySelectorAll("[data-filter]").forEach(function (b) {
+            b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+        });
+        render(btn.getAttribute("data-filter"));
+    });
+});
+
+render("all");
+renderDetails();
+</script>
+</body>
+</html>
