@@ -149,7 +149,7 @@ td.log { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular
 <div class="page">
     <header>
         <h1>ix_esl_web 功能進度</h1>
-        <p class="meta">2026-10-27 · ix_esl_web HEAD <span class="mono">212e9cd</span>（multi-language），working tree 無未 commit 修改</p>
+        <p class="meta">2026-10-27 · ix_esl_web HEAD <span class="mono">212e9cd</span>（multi-language），加上未 commit 的 RACE Command</p>
     </header>
 
     <div class="summary" aria-label="總計">
@@ -249,7 +249,7 @@ var data = [
         page: "Settings",
         rows: [
             ["Tool Setting", "done", "—"],
-            ["RACE Command", "todo", "—", "畫面有了，Send 還是 prototype 的 sample 回應（settings.js prototypeRequest）", "race"],
+            ["RACE Command", "done", "—", "2026-10-27 接上；實機測過 05 5A 02 00 1E 40 → v1.11"],
             ["Configure Key", "todo", "—", "2.0.1 的 page_configure_key.html，ix_esl_web 還沒有這頁", "configure-key"],
         ],
     },
@@ -348,19 +348,6 @@ var details = [
         ],
         have: ["Execution 分頁的表格和 Details", "資料表（`esl_img_update` 等）在 hist DB"],
         todo: ["server 加這兩種查詢的 API", "Execution 分頁加圖表"],
-    },
-    {
-        id: "race",
-        title: "RACE Command",
-        page: "Settings",
-        source: ["2.0.1 `page_race_raw_command.html`：送 flag `race_command` 和 `race_command_data`，把回傳的 `command_response` 接在畫面上"],
-        have: [
-            "畫面（輸入框、Send、Clear、紀錄）",
-            "`api_job.py` 已經有 `race_command` 的 branch（去掉非 hex 字元後送給 gateway）",
-            "gateway `esl_server_flow.cc` 同步回 `command_response`，`/tag_func_request` 會把它傳回前端",
-        ],
-        todo: ["`settings.js` 的 `prototypeRequest` 換成 POST `/tag_func_request`，顯示 `command_response` 或 `error`"],
-        note: ["九項裡剩下工作最少的一項"],
     },
     {
         id: "configure-key",
