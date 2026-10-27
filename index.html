@@ -149,7 +149,7 @@ td.log { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular
 <div class="page">
     <header>
         <h1>ix_esl_web 功能進度</h1>
-        <p class="meta">2026-10-27 · ix_esl_web HEAD <span class="mono">6a3aa3b</span>（management groups），加上未 commit 的 Import CSV</p>
+        <p class="meta">2026-10-27 · ix_esl_web HEAD <span class="mono">8766946</span>（import tag csv），加上未 commit 的語言切換第二到第四批</p>
     </header>
 
     <div class="summary" aria-label="總計">
@@ -257,7 +257,7 @@ var data = [
         page: "其他",
         rows: [
             ["語言切換：header、側欄、console 固定文字、AP 頁", "done", "—", "中文是草稿，還沒給 PM 看"],
-            ["語言切換：Tags、Products、Templates、Logs、Settings", "todo", "—", "", "i18n"],
+            ["語言切換：Tags、Products、Templates、Logs、Settings", "done", "—", "2026-10-27；中文是草稿，還沒給 PM 看；server 錯誤訊息也有中文"],
             ["Update display 的 Compress 下拉", "skip", "—", "只用 Heatshrink"],
         ],
     },
@@ -325,19 +325,6 @@ var details = [
         ],
         todo: ["新的頁面或分頁", "server 加 Generate、Save 的 API"],
         note: ["重新產生 key pair 之後，已經 configure 的 tag 會受什麼影響，還沒查"],
-    },
-    {
-        id: "i18n",
-        title: "語言切換：其餘頁面",
-        page: "全部",
-        source: ["`I18N_PLAN.md` 的後續批次"],
-        have: ["i18next、`/i18n/resources.js`、`static/js/i18n.js`", "header、側欄、console 固定文字、AP 頁、`api_ap.py` 的錯誤訊息"],
-        todo: [
-            "Tags（含 console 的 job 文字、functionLabels、Assign dialog）",
-            "Products、Templates、Logs、Settings",
-            "`api_tags.py`、`api_products.py`、`api_templates.py`、`api_logs.py`、`api_settings.py` 的錯誤訊息加 `message_key`",
-        ],
-        note: ["中文是我起草的，要給 PM 確認用詞"],
     },
 ];
 
