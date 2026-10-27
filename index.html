@@ -149,7 +149,7 @@ td.log { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular
 <div class="page">
     <header>
         <h1>ix_esl_web 功能進度</h1>
-        <p class="meta">2026-10-27 · ix_esl_web HEAD <span class="mono">212e9cd</span>（multi-language），加上未 commit 的 RACE Command</p>
+        <p class="meta">2026-10-27 · ix_esl_web HEAD <span class="mono">6a3aa3b</span>（management groups），加上未 commit 的 Import CSV</p>
     </header>
 
     <div class="summary" aria-label="總計">
@@ -199,7 +199,7 @@ var data = [
             ["Update display+", "done", "4", "只支援 Heatshrink"],
             ["Assign product / Unbind", "done", "—"],
             ["Organize › Assign group", "done", "—"],
-            ["Groups 改名、刪除", "todo", "—", "", "groups"],
+            ["Groups › Manage groups（改名、刪除）", "done", "—", "2026-10-27；刪除時 tag 改成 No group，只改 DB"],
             ["Display › Refresh display", "done", "2"],
             ["Display › Assign image file", "done", "—"],
             ["Display › Blink LED", "done", "61 led_control", "次數和 LED control 合計"],
@@ -214,7 +214,7 @@ var data = [
             ["Delete / Force Delete", "done", "2 / 19"],
             ["Add tags › Add manually", "done", "—"],
             ["Add tags › Scan nearby", "done", "37 scan"],
-            ["Add tags › Import CSV", "todo", "—", "", "add-csv"],
+            ["Add tags › Import CSV", "done", "—", "2026-10-27；`/api/tags/add_batch`，在別的 AP 上的 MAC 跳過"],
             ["Add tags › Quick deploy", "todo", "—", "", "add-range"],
             ["Flash log › Enable / Dump / Assert", "done", "2 / 2 / 沒看到"],
             ["Flash log › Log files 列表、下載", "done", "—"],
@@ -242,7 +242,7 @@ var data = [
         page: "Logs",
         rows: [
             ["Execution / Image Update / Battery & RSSI / Device State / Roaming 五個分頁", "done", "—"],
-            ["2.0.1 的 Time Spent、Tag Count By Time 圖表", "todo", "—", "", "log-charts"],
+            ["2.0.1 的 Time Spent、Tag Count By Time 圖表", "skip", "—", "2026-10-27 決定：Logs › Execution 維持現在的表格和 Details"],
         ],
     },
     {
@@ -266,21 +266,6 @@ var data = [
 /* Each unfinished row's id (5th field) points at one of these. Text in `backticks` is shown as code. */
 var details = [
     {
-        id: "groups",
-        title: "Groups 改名、刪除",
-        page: "Tags",
-        source: ["prototype 沒有這個畫面；2.0.1 沒有 group，`ix_group` 是 ix_esl_web 自己加的表"],
-        have: [
-            "`ix_group` 表（`dongle_addr`、`group_id`、`name`），每個 AP 各自一套",
-            "Assign group 建立新 group 時可以取名（最多 40 字）",
-        ],
-        todo: [
-            "Groups 選單加改名、刪除的入口",
-            "server 加改名、刪除的 API",
-            "刪除時把該 group 裡 tag 的 `esl_tag_info.ix_group_id` 改回 0",
-        ],
-    },
-    {
         id: "reset-count",
         title: "Reset update count",
         page: "Tags › More › Maintenance",
@@ -298,24 +283,12 @@ var details = [
         ],
     },
     {
-        id: "add-csv",
-        title: "Add tags › Import CSV",
-        page: "Tags",
-        source: ["只有 prototype 有（2.0.1 的 Add/Delete Tag 頁只有 Export CSV）", "prototype 的規則：第一欄是 MAC，header 列可有可無"],
-        have: ["prototype 的 dialog 畫面", "`/api/tags/add`：一次新增一顆，已存在時回錯誤"],
-        todo: [
-            "批次新增的 API（或前端逐筆呼叫 `/api/tags/add`）",
-            "預覽：列出格式錯誤、重複、已存在的 MAC，只新增正確的列（可沿用 Products Import CSV 的做法）",
-        ],
-        note: ["只寫 DB，不會送任何指令給 tag"],
-    },
-    {
         id: "add-range",
         title: "Add tags › Quick deploy",
         page: "Tags",
         source: ["只有 prototype 有：輸入 Start MAC、End MAC，兩端都包含"],
-        have: ["prototype 的 dialog 畫面", "`/api/tags/add`"],
-        todo: ["和 Import CSV 共用批次新增的 API", "範圍太大時擋下"],
+        have: ["prototype 的 dialog 畫面（目前 disabled）", "Import CSV 用的批次新增 API `/api/tags/add_batch`"],
+        todo: ["dialog 接到 `/api/tags/add_batch`，訊息照回應寫出跳過的 tag", "範圍太大時擋下（prototype 是 1,000 顆）"],
         note: ["只寫 DB，不會送任何指令給 tag"],
     },
     {
@@ -336,18 +309,6 @@ var details = [
             "V2 只比對 4 bytes 版本，同一個 x.y.z、不同 commit 的 image 會回 SAME_VERSION",
             "gateway、1592、1615 三邊的 V2 都還沒有在硬體上跑過",
         ],
-    },
-    {
-        id: "log-charts",
-        title: "Logs 圖表",
-        page: "Logs › Execution",
-        source: [
-            "2.0.1 `report_run_status.html`：configure、image update、tag_fota_v2 各有兩張圖",
-            "Time Spent：每顆 tag 花的時間（ms，bar chart），route `run_report_*_time`",
-            "Tag Count By Time：各個時間點完成的 tag 數，route `run_report_*_count_by_time`",
-        ],
-        have: ["Execution 分頁的表格和 Details", "資料表（`esl_img_update` 等）在 hist DB"],
-        todo: ["server 加這兩種查詢的 API", "Execution 分頁加圖表"],
     },
     {
         id: "configure-key",
