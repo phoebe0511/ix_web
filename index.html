@@ -54,6 +54,8 @@ body {
 header { display: grid; gap: 8px; }
 h1 { margin: 0; font-size: 28px; line-height: 1.25; font-weight: 700; text-wrap: balance; }
 .meta { margin: 0; color: var(--muted); font-size: 13px; }
+.manual { margin: 4px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; font-size: 14px; }
+.manual .sep { color: var(--muted); font-size: 13px; margin-left: 6px; }
 code, .mono { font-family: var(--font-mono); font-size: 0.88em; }
 .summary {
     display: grid;
@@ -149,7 +151,8 @@ td.log { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular
 <div class="page">
     <header>
         <h1>ix_esl_web 功能進度</h1>
-        <p class="meta">2026-10-27 · ix_esl_web HEAD <span class="mono">8766946</span>（import tag csv），加上未 commit 的語言切換第二到第四批</p>
+        <p class="meta">2026-10-28 · ix_esl_web HEAD <span class="mono">04dabc1</span>（update template），加上未 commit 的 Configure Key</p>
+        <p class="manual"><b>使用手冊</b><a class="feature-link" href="manual/zh-TW.html">中文</a><a class="feature-link" href="manual/en.html" hreflang="en" lang="en">English</a><span class="sep">PPT</span><a class="feature-link" href="manual/ix_esl_web_manual_zh-TW.pptx" download>中文</a><a class="feature-link" href="manual/ix_esl_web_manual_en.pptx" download hreflang="en" lang="en">English</a></p>
     </header>
 
     <div class="summary" aria-label="總計">
@@ -184,7 +187,9 @@ var data = [
         rows: [
             ["Overview（AP 列表、刪除）", "done", "—"],
             ["AP Switch（Current AP）", "done", "—"],
+            ["AP Switch：AP 改名", "done", "—", "2026-10-29 加上（2.0.1 沒有）；只能用 A-Z a-z 0-9 _ -，不分大小寫不能重複；還沒實機測"],
             ["Dongle DFU", "done", "沒看到"],
+            ["Configure Key", "done", "—", "2026-10-28 接上，在 AP 頁；只送勾選的 AP；key 存在 server（key_store/configure_keys.json）；還沒實機測。換 key 對已 configure 的 tag 有什麼影響，還沒查"],
         ],
     },
     {
@@ -218,7 +223,7 @@ var data = [
             ["Add tags › Quick deploy", "todo", "—", "", "add-range"],
             ["Flash log › Enable / Dump / Assert", "done", "2 / 2 / 沒看到"],
             ["Flash log › Log files 列表、下載", "done", "—"],
-            ["FOTA V2（整個 AP 廣播）", "todo", "—", "2.0.1 的 page_tag_fota_v2.html", "fota-v2"],
+            ["FOTA V2（整個 AP 廣播）", "done", "—", "2026-10-29 接上，Tags 的 FOTA V2 分頁；還沒實機測", "fota-v2"],
         ],
     },
     {
@@ -235,7 +240,7 @@ var data = [
         rows: [
             ["新增、修改、刪除、上傳圖檔", "done", "—"],
             ["Edit template：拖曳移動/縮放框、預覽放大、Title / Label / Code / Price", "done", "—"],
-            ["Update time 設定", "skip", "—", "template_info 沒有欄位，產圖也不支援；畫面上是 disabled"],
+            ["Update time 設定（開關、顏色、位置）", "done", "—", "template_info 另外加了 update_time_* 欄位；產圖畫產圖當下的時間（月/日 時:分）"],
         ],
     },
     {
@@ -250,7 +255,6 @@ var data = [
         rows: [
             ["Tool Setting", "done", "—"],
             ["RACE Command", "done", "—", "2026-10-27 接上；實機測過 05 5A 02 00 1E 40 → v1.11"],
-            ["Configure Key", "todo", "—", "2.0.1 的 page_configure_key.html，ix_esl_web 還沒有這頁", "configure-key"],
         ],
     },
     {
@@ -303,28 +307,13 @@ var details = [
             "`api_job.py` 已經有 `tag_fota_v2` 的 branch（把檔案傳給 gateway）",
             "DB 已經有 `fota_v2_status` 欄位",
             "1592 ER8、1615 ER6 都有 V2 的程式",
+            "2026-10-29：Tags › FOTA V2 分頁（上傳 `/api/tags/fota_v2/upload`、結果 `/api/tags/fota_v2` 每 5 秒更新、Start 送 `tag_fota_v2` 不帶 MAC）；Execution console 顯示階段 PA x/y（%）→ Patch → Done。見 ix_esl_web `doc/FOTA_V2_PLAN.md`",
         ],
-        todo: ["上傳檔案的 route（設定 `g_fota_v2_file_name`、檢查版本）", "UI 入口", "每顆 tag 的 V2 狀態顯示"],
+        todo: ["實機測試"],
         note: [
             "V2 只比對 4 bytes 版本，同一個 x.y.z、不同 commit 的 image 會回 SAME_VERSION",
             "gateway、1592、1615 三邊的 V2 都還沒有在硬體上跑過",
         ],
-    },
-    {
-        id: "configure-key",
-        title: "Configure Key",
-        page: "Settings（暫定）",
-        source: [
-            "2.0.1 `page_configure_key.html`：Generate 產生 ap_roaming_key（16 B）、ap_key（24 B）、ap_csrk（16 B），public key 讀 `key_store/public_key.pem`，沒有就產生一組 ECDSA key pair",
-            "Save：送 func `set_esl_plus_configure_keys` 給 gateway，gateway 呼叫 `race_esl_plus_configure_keys` 寫進 1592",
-        ],
-        have: [
-            "`ix_esl_web/key_store/` 已經有 `private_key.pem`、`public_key.pem`",
-            "roaming 簽章（`request_signature`）已經在用這把 private key",
-            "gateway 已經支援 `set_esl_plus_configure_keys`",
-        ],
-        todo: ["新的頁面或分頁", "server 加 Generate、Save 的 API"],
-        note: ["重新產生 key pair 之後，已經 configure 的 tag 會受什麼影響，還沒查"],
     },
 ];
 
